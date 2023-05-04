@@ -1,17 +1,11 @@
-USE [esencialDB]
-GO
-DROP PROCEDURE llenado
-GO
 CREATE PROCEDURE llenado
 AS
 BEGIN
     DECLARE @nombre varchar(50);
     DECLARE @apellido varchar(50);
     DECLARE @contador INT = 1;
-	DECLARE @DIEZMIL INT = 10000;
-	DECLARE @CIENMIL INT = 100000;
-    
-	WHILE @contador <= @DIEZMIL
+
+	WHILE @contador <= 10000
     BEGIN
         SET @nombre = 'NombreIns:' + CAST(@contador AS varchar(5));
 		SET @apellido = 'ApellidoIns:' + CAST(@contador AS varchar(5));;
@@ -30,7 +24,7 @@ BEGIN
 	DECLARE @tipoDesecho smallint;
 	DECLARE @salubridad decimal(5,2);
 
-	WHILE @contador <= @DIEZMIL
+	WHILE @contador <= 10000
     BEGIN
 		SET @tipoDesecho = RAND() * 3 + 1;
 		SET @salubridad = RAND() * 100;
@@ -44,7 +38,7 @@ BEGIN
 
 	SET @contador = 1;
 
-	WHILE @contador <= @DIEZMIL
+	WHILE @contador <= 10000
     BEGIN
         SET @nombre = 'Tratamiento:' + CAST(@contador AS varchar(5));;
 
@@ -60,7 +54,7 @@ BEGIN
 
 	SET @contador = 1;
 
-	WHILE @contador <= @DIEZMIL
+	WHILE @contador <= 10000
     BEGIN
         SET @nombre = 'Material:'+ CAST(@contador AS varchar(5));
 
@@ -71,7 +65,7 @@ BEGIN
     END
 
 	SET @contador = 1;
-	WHILE @contador <= @DIEZMIL
+	WHILE @contador <= 10000
     BEGIN
         SET @nombre = 'Producto:' + CAST(@contador AS varchar(5));;
 
@@ -84,7 +78,7 @@ BEGIN
 	DECLARE @productoId INT;
 
 	SET @contador = 1;
-	WHILE @contador <= @DIEZMIL
+	WHILE @contador <= 10000
     BEGIN
 		SET @productoId = RAND()*9999 + 1;
         SET @cantidad = RAND()*999 + 1;
@@ -102,7 +96,7 @@ BEGIN
 	DECLARE @produccionId int;
 
 	SET @contador = 1;
-	WHILE @contador <= @CIENMIL
+	WHILE @contador <= 100000
     BEGIN
 		SET @materialId = RAND()*9999 + 1;
 		SET @cantidad = RAND()*999 + 1;
@@ -115,23 +109,11 @@ BEGIN
 
         SET @contador = @contador + 1;
     END
-
 END
+
+
+GO
 EXEC llenado 
 
-DELETE FROM logProducciones;
-DELETE FROM inspectores;
-DELETE FROM tratamientos;
-DELETE FROM desechos;
-DELETE FROM tiposDesecho;
-DELETE FROM materiales;
-DELETE FROM inventarioMateriales;
-DELETE FROM productos;
+DROP PROCEDURE llenado
 
-DBCC CHECKIDENT('esencialDB.dbo.inspectores',RESEED,0);
-DBCC CHECKIDENT('esencialDB.dbo.tiposDesecho',RESEED,0);
-DBCC CHECKIDENT('esencialDB.dbo.desechos',RESEED,0);
-DBCC CHECKIDENT('esencialDB.dbo.tratamientos',RESEED,0);
-DBCC CHECKIDENT('esencialDB.dbo.productos',RESEED,0);
-DBCC CHECKIDENT('esencialDB.dbo.materiales',RESEED,0);
-DBCC CHECKIDENT('esencialDB.dbo.logProducciones',RESEED,0);
