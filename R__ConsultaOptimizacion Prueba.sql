@@ -5,9 +5,9 @@ SELECT
 	SUM(P.cantidad) AS SumaCantidad,
 	STDEV(INS.inspectorId) AS InspectorCount
 FROM dbo.inventarioMateriales IM
-	LEFT JOIN dbo.inspectores INS on INS.inspectorId = IM.inspectorId	 -- Left Join
-	INNER JOIN dbo.logProducciones P on P.produccionId = IM.produccionId	 
-	LEFT JOIN dbo.materiales M on M.materialId= IM.materialId		     
+	LEFT JOIN dbo.inspectores INS on INS.inspectorId = IM.inspectorId	 -- Left Join	 
+	LEFT JOIN dbo.materiales M on M.materialId= IM.materialId	
+	INNER JOIN dbo.logProducciones P on P.produccionId = IM.produccionId
 WHERE 
 	INS.inspectorId > 1000 AND											 -- Where Primary Field
 	uniMedida = 'kg'													 -- Igualdad
@@ -20,8 +20,8 @@ SELECT
 	SUM(P.cantidad) AS SumaCantidad,
 	STDEV(INS.inspectorId) AS InspectorCount
 FROM dbo.inventarioMateriales IM
-	LEFT JOIN dbo.inspectores INS on INS.inspectorId = IM.inspectorId	 -- Left Join
-	INNER JOIN dbo.logProducciones P on P.produccionId = IM.produccionId	   
+	LEFT JOIN dbo.inspectores INS on INS.inspectorId = IM.inspectorId	 -- Left Join   
+	INNER JOIN dbo.logProducciones P on P.produccionId = IM.produccionId
 WHERE 
 	P.cantidad > 100 AND												 -- Where Non Primary Field
 	INS.nombre != 'NombreIns:1'											 -- Desigualdad
@@ -43,3 +43,4 @@ CREATE NONCLUSTERED INDEX IX_inventarioMateriales_inspectorId ON dbo.inventarioM
 
 -- Índice no agrupado en la tabla inventarioMateriales para la columna produccionId
 CREATE NONCLUSTERED INDEX IX_inventarioMateriales_produccionId ON dbo.inventarioMateriales (produccionId);
+
