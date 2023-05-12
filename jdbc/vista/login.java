@@ -1,4 +1,4 @@
-package esencialui.frames;
+package vista;
 
 public class login extends javax.swing.JFrame {
 
@@ -30,7 +30,7 @@ public class login extends javax.swing.JFrame {
         p_main.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         lbl_usuario.setFont(new java.awt.Font("Century Gothic", 0, 18)); // NOI18N
-        lbl_usuario.setText("Usuario");
+        lbl_usuario.setText("Identificación");
         p_main.add(lbl_usuario, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 130, -1, -1));
 
         lbl_contrasena.setFont(new java.awt.Font("Century Gothic", 0, 18)); // NOI18N
