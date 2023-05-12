@@ -1,7 +1,5 @@
 USE[esencialDB]
 GO
-DROP PROCEDURE llenado
-GO
 CREATE PROCEDURE llenado
 AS
 BEGIN
@@ -113,6 +111,19 @@ BEGIN
 
         SET @contador = @contador + 1;
     END
+
+	INSERT INTO usuarios(apellido, nombre, nickname, checksum, fechaRegistro, profilePicture, password) VALUES('apellido', 'nombre', 'nick', CHECKSUM(8), '2023-05-10 15:30:00.000', 'pic', 'pass')
+	INSERT INTO contactoType(nombre) VALUES('tel')
+
+	SET @contador = 1;
+	WHILE @contador <= 100
+    BEGIN
+
+        INSERT INTO contactoValue(value, contactoTypeId)
+        VALUES (CONVERT(varchar(10), @contador), 1);
+
+        SET @contador = @contador + 1;
+    END
 END
 
 
@@ -120,23 +131,3 @@ GO
 EXEC llenado 
 
 DROP PROCEDURE llenado
-
-DELETE productosXventa;
-DELETE logVentas;
-DELETE FROM logProducciones;
-DELETE FROM inspectores;
-DELETE FROM tratamientos;
-DELETE FROM desechos;
-DELETE FROM tiposDesecho;
-DELETE FROM inventarioMateriales;
-DELETE FROM materiales;
-DELETE FROM productos;
-
-DBCC CHECKIDENT('esencialDB.dbo.logVentas',RESEED,0);
-DBCC CHECKIDENT('esencialDB.dbo.inspectores',RESEED,0);
-DBCC CHECKIDENT('esencialDB.dbo.tiposDesecho',RESEED,0);
-DBCC CHECKIDENT('esencialDB.dbo.desechos',RESEED,0);
-DBCC CHECKIDENT('esencialDB.dbo.tratamientos',RESEED,0);
-DBCC CHECKIDENT('esencialDB.dbo.productos',RESEED,0);
-DBCC CHECKIDENT('esencialDB.dbo.materiales',RESEED,0);
-DBCC CHECKIDENT('esencialDB.dbo.logProducciones',RESEED,0);

@@ -1,11 +1,11 @@
 USE [esencialDB]
-CREATE TYPE [dbo].[ProductoTableType] AS TABLE(
-    [productoId] [int] NOT NULL,
-    [cantidad] [bigint] NOT NULL
+CREATE TYPE [dbo].[ContactoTableType] AS TABLE(
+    [contactoValueId] [bigint] NOT NULL,
+    [usuarioId] [bigint] NOT NULL
 )
 GO
-CREATE PROCEDURE [dbo].[SP_InsertarVentas]
-	@TablaProductos dbo.ProductoTableType READONLY
+CREATE PROCEDURE [dbo].[SP_InsertarContactos]
+	@TablaContactos dbo.ContactoTableType READONLY
 AS 
 BEGIN
 	SET NOCOUNT ON -- no retorne metadatos
@@ -13,10 +13,6 @@ BEGIN
 	DECLARE @ErrorNumber INT, @ErrorSeverity INT, @ErrorState INT, @CustomError INT
 	DECLARE @Message VARCHAR(200)
 	DECLARE @InicieTransaccion BIT
-	DECLARE @ventaId INT -- variable para almacenar el ID de la venta
-	
-	INSERT INTO dbo.logVentas (checksum) VALUES (checksum('vano'))
-	SET @ventaId = IDENT_CURRENT('logVentas') -- obtener el valor del ID generado
 	
 	SET @InicieTransaccion = 0
 	IF @@TRANCOUNT=0 BEGIN
@@ -28,9 +24,9 @@ BEGIN
 	BEGIN TRY
 		SET @CustomError = 2001
 		
-		INSERT INTO DBO.productosXventa(productoId, cantidad, ventaId)
-		SELECT productoId, cantidad, @ventaId
-        FROM @TablaProductos;
+		INSERT INTO DBO.contactosXUsuario(contactoValueId, usuarioId)
+		SELECT contactoValueId, usuarioId
+        FROM @TablaContactos;
 		
 		IF @InicieTransaccion=1 BEGIN
 			COMMIT
@@ -50,13 +46,9 @@ BEGIN
 	END CATCH	
 END
 
-DECLARE @productosTabla ProductoTableType
-INSERT INTO @productosTabla VALUES (1000000, 89), (98, 98)
+DECLARE @contactosTabla ContactoTableType
+INSERT INTO @contactosTabla VALUES (10, 1), (280, 1)
 
-EXEC dbo.SP_InsertarVentas @productosTabla
+EXEC dbo.SP_InsertarContactos @contactosTabla
 
-DROP TYPE [dbo].[ProductoTableType]
-
-SELECT * FROM productosXventa
-SELECT * FROM logVentas
-
+select * from contactosXUsuario

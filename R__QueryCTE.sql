@@ -1,41 +1,67 @@
 USE [esencialDB]
 GO
-SET STATISTICS TIME ON
-GO
-
-WITH cte1 AS (
-    SELECT 
-        IM.produccionId,
-        P.cantidad,
-        INS.inspectorId,
-        M.uniMedida
-    FROM dbo.inventarioMateriales IM
-    LEFT JOIN dbo.inspectores INS ON INS.inspectorId = IM.inspectorId
-    LEFT JOIN dbo.materiales M ON M.materialId = IM.materialId
-    INNER JOIN dbo.logProducciones P ON P.produccionId = IM.produccionId
-    WHERE 
-        INS.inspectorId > 1000 AND
-        M.uniMedida = 'kg'
-),
-cte2 AS (
-    SELECT 
-        IM.produccionId,
-        P.cantidad,
-        INS.inspectorId
-    FROM dbo.inventarioMateriales IM
-    LEFT JOIN dbo.inspectores INS ON INS.inspectorId = IM.inspectorId
-    INNER JOIN dbo.logProducciones P ON P.produccionId = IM.produccionId
-    WHERE 
-        P.cantidad > 100 AND
-        INS.nombre != 'NombreIns:1'
-)
 SELECT 
-    -- Agregate Functions
-    SUM(cte1.cantidad) AS SumaCantidad,
-    STDEV(cte1.inspectorId) AS InspectorCount
-FROM cte1
-WHERE cte1.produccionId NOT IN (SELECT produccionId FROM cte2)
-GROUP BY cte1.cantidad
-HAVING SUM(cte1.cantidad) > 5
-ORDER BY SUM(cte1.cantidad) DESC
+	SUM(P.cantidad) AS SumaCantidad,
+	STDEV(INS.inspectorId) AS InspectorCount
+FROM dbo.inventarioMateriales IM
+	LEFT JOIN dbo.inspectores INS on INS.inspectorId = IM.inspectorId	 
+	INNER JOIN dbo.logProducciones P on P.produccionId = IM.produccionId	 
+	INNER JOIN dbo.materiales M on M.materialId= IM.materialId		     
+WHERE 
+	INS.inspectorId > 1000 AND											 
+	uniMedida = 'kg'													 
+GROUP BY P.cantidad													     
+HAVING SUM(P.cantidad) > 5
+EXCEPT																    
+
+SELECT 
+	-- Agregate Functions
+	SUM(P.cantidad) AS SumaCantidad,
+	STDEV(INS.inspectorId) AS InspectorCount
+FROM dbo.inventarioMateriales IM
+	LEFT JOIN dbo.inspectores INS on INS.inspectorId = IM.inspectorId	 
+	INNER JOIN dbo.logProducciones P on P.produccionId = IM.produccionId	   
+WHERE 
+	P.cantidad > 100 AND												 
+	INS.nombre != 'NombreIns:1'											 
+GROUP BY P.cantidad													    
+HAVING SUM(P.cantidad) > 5											 
+ORDER BY SUM(P.cantidad) DESC										    
+FOR JSON PATH
+GO
+WITH CTE1 AS ( -- Agregar suma y desviación estándar genérica para optimizar con uso de CTE.
+    SELECT 
+        P.cantidad,
+        SUM(P.cantidad) AS SumaCantidad,
+        STDEV(INS.inspectorId) AS InspectorCount
+    FROM dbo.inventarioMateriales IM
+        LEFT JOIN dbo.inspectores INS on INS.inspectorId = IM.inspectorId	 
+        INNER JOIN dbo.logProducciones P on P.produccionId = IM.produccionId	 
+        INNER JOIN dbo.materiales M on M.materialId= IM.materialId		     
+    WHERE 
+        INS.inspectorId > 1000 AND											 
+        uniMedida = 'kg'													 
+    GROUP BY P.cantidad													     
+    HAVING SUM(P.cantidad) > 5
+),
+CTE2 AS (
+    SELECT 
+        P.cantidad,
+        SUM(P.cantidad) AS SumaCantidad,
+        STDEV(INS.inspectorId) AS InspectorCount
+    FROM dbo.inventarioMateriales IM
+        LEFT JOIN dbo.inspectores INS on INS.inspectorId = IM.inspectorId	 
+        INNER JOIN dbo.logProducciones P on P.produccionId = IM.produccionId	   
+    WHERE 
+        P.cantidad > 100 AND												 
+        INS.nombre != 'NombreIns:1'											 
+    GROUP BY P.cantidad													    
+    HAVING SUM(P.cantidad) > 5	
+),
+SELECT SumaCantidad, InspectorCount 
+FROM CTE1 
+EXCEPT 
+SELECT SumaCantidad, InspectorCount 
+FROM CTE2
+ORDER BY SumaCantidad DESC
 FOR JSON PATH
