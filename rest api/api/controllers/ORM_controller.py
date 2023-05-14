@@ -1,7 +1,7 @@
-from api.repositories.SP_repository import executeSP
+from api.repositories import ORM_repository
 
 #-----------------------------------------------------------------
 # Controlador de logica de datos
 #-----------------------------------------------------------------
-def controllerExecuteSP(pool):
-    return executeSP(pool)
+def controllerExecuteSPbyORM():
+    return ORM_repository.executeSPbyORM()

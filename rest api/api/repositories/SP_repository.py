@@ -13,8 +13,7 @@ def startConexion(pool):
     database = "esencialDB"
     driver = "ODBC Driver 17 for SQL Server"
     if pool:
-        #Maximo 10 conexiones
-        conexion = create_engine(f"mssql+pyodbc://{username}:{password}@{server}:{port}/{database}?driver={driver}", pool_size=10, max_overflow=0)
+        conexion = create_engine(f"mssql+pyodbc://{username}:{password}@{server}:{port}/{database}?driver={driver}", pool_size=5, max_overflow=5)
     else:
         conexion = create_engine(f"mssql+pyodbc://{username}:{password}@{server}:{port}/{database}?driver={driver}", poolclass=NullPool)
     return conexion
@@ -25,9 +24,10 @@ def startConexion(pool):
 def executeSP(pool):
     conexion = startConexion(pool)
     query = text("EXEC SP_apitest") #Ejecucion del SP en formato sql
-    with conexion.connect() as connection:
-        result = connection.execute(query)
-        keys = result.keys()
+    with conexion.connect() as cursor:
+        res = cursor.execute(query)
+        keys = res.keys()
         # Mete los resultados en diccionarios para el formato json posteriormente
-        resultDict = [dict(zip(keys, row)) for row in result.fetchall()]
-        return resultDict
+        resJSON = [dict(zip(keys, row)) for row in res.fetchall()]
+        cursor.close()
+        return resJSON
