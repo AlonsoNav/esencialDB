@@ -2,27 +2,28 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.pool import NullPool
 
 #-----------------------------------------------------------------
-# Función para iniciar la conexion a la base de datos
-# True: Utilizar conexiones pool || False Sin conexiones
+# Iniciar la conexion a la base de datos
 #-----------------------------------------------------------------
-def startConexion(pool):
-    username = "sa"
-    password = "123"
-    server = "localhost"
-    port = "1433"
-    database = "esencialDB"
-    driver = "ODBC Driver 17 for SQL Server"
-    if pool:
-        conexion = create_engine(f"mssql+pyodbc://{username}:{password}@{server}:{port}/{database}?driver={driver}", pool_size=5, max_overflow=5)
-    else:
-        conexion = create_engine(f"mssql+pyodbc://{username}:{password}@{server}:{port}/{database}?driver={driver}", poolclass=NullPool)
-    return conexion
+username = "sa"
+password = "123"
+server = "localhost"
+port = "1433"
+database = "esencialDB"
+driver = "ODBC Driver 17 for SQL Server"
+
+poolEngine = create_engine(f"mssql+pyodbc://{username}:{password}@{server}:{port}/{database}?driver={driver}", pool_size=5, max_overflow=10)
+NoPoolEngine = create_engine(f"mssql+pyodbc://{username}:{password}@{server}:{port}/{database}?driver={driver}", poolclass=NullPool)
 
 #-----------------------------------------------------------------
 # Funcion para ejecutar el stored procedure
+# True: Utilizar conexiones pool || False Sin conexiones
 #-----------------------------------------------------------------
 def executeSP(pool):
-    conexion = startConexion(pool)
+    if pool:
+            conexion = poolEngine
+    else:
+        conexion = NoPoolEngine
+
     query = text("EXEC SP_apitest") #Ejecucion del SP en formato sql
     with conexion.connect() as cursor:
         res = cursor.execute(query)
