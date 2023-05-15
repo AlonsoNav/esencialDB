@@ -25,19 +25,68 @@ public class EsencialDBAccess implements IDataConstants{
         return instance;
     }
     
-    public ArrayList<Desecho> getDesechos(){
-        ArrayList<Desecho> res = new ArrayList<Desecho>();
+    public ArrayList<Recolector> getRecolectores(){
+        ArrayList<Recolector> res = new ArrayList<Recolector>();
         try{
             Statement stmt = conexion.createStatement();
-            String SQL = "SELECT * FROM desechos";
+            String SQL = "SELECT recolectoraId, nombre FROM recolectoras;";
             ResultSet rs = stmt.executeQuery(SQL);
             
             while (rs.next()){
-                Desecho desecho = new Desecho();
-                desecho.setNombre(rs.getString("nombre"));
-                desecho.setSalubridad(rs.getBigDecimal("salubridad"));
-                desecho.setTipoDesecho(rs.getInt("tipoDesechoId"));
+                Recolector recolector = new Recolector(rs.getLong("recolectoraId"), rs.getString("nombre"));
+                res.add(recolector);
+            }
+        }catch(Exception ex){
+            ex.printStackTrace();
+        }
+        return res;
+    }
+    
+    public ArrayList<Productor> getProductores(long id){
+        ArrayList<Productor> res = new ArrayList<Productor>();
+        try{
+            PreparedStatement spGetProductorForRecolector = conexion.prepareStatement("{call dbo.SP_GetProductorForRecolector(?)}");
+            spGetProductorForRecolector.setLong(1, id);  
+            ResultSet rs = spGetProductorForRecolector.executeQuery(); 
+            
+            while (rs.next()){
+                Productor productor = new Productor(rs.getLong("contratoId"), rs.getInt("productorId"), rs.getString("descripcion"));
+                res.add(productor);
+            }
+        }catch(Exception ex){
+            ex.printStackTrace();
+        }
+        return res;
+    }
+    
+    public ArrayList<Desecho> getDesechos(long id){
+        ArrayList<Desecho> res = new ArrayList<Desecho>();
+        try{
+            PreparedStatement spGetProductorForRecolector = conexion.prepareStatement("{call dbo.SP_GetDesechoForContrato(?)}");
+            spGetProductorForRecolector.setLong(1, id);  
+            ResultSet rs = spGetProductorForRecolector.executeQuery(); 
+            
+            while (rs.next()){
+                Desecho desecho = new Desecho(rs.getInt("desechoId"), rs.getInt("tipoDesechoId"), rs.getString("nombre"));
                 res.add(desecho);
+            }
+        }catch(Exception ex){
+            ex.printStackTrace();
+        }
+        return res;
+    }
+    
+    public ArrayList<TipoRecipiente> getRecipientes(int id, int opc){
+        ArrayList<TipoRecipiente> res = new ArrayList<TipoRecipiente>();
+        try{
+            PreparedStatement spGetProductorForRecolector = conexion.prepareStatement("{call dbo.SP_GetRecipientesForProOrRec(?, ?)}");
+            spGetProductorForRecolector.setInt(1, id);  
+            spGetProductorForRecolector.setInt(2, opc); 
+            ResultSet rs = spGetProductorForRecolector.executeQuery(); 
+            
+            while (rs.next()){
+                TipoRecipiente rec = new TipoRecipiente(rs.getInt("tipoRecId"), rs.getBigDecimal("capacidad"), rs.getString("description"), rs.getInt("cantidad"));
+                res.add(rec);
             }
         }catch(Exception ex){
             ex.printStackTrace();

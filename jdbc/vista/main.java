@@ -1,9 +1,12 @@
 package vista;
 
+import control.*;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
@@ -14,10 +17,28 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 
 public class main extends javax.swing.JFrame {
-    int num = 0;
+    private int num = 0;
+    private ArrayList<Recolector> recolectores;
+    private ArrayList<Productor> productores;
+    private ArrayList<Desecho> desechos;
+    private ArrayList<TipoRecipiente> recRecolectores;
+    private ArrayList<TipoRecipiente> recProductores;
+    private Recolector recolector;
+    private Productor productor;
+    
     public main() {
         initComponents();
         this.setLocationRelativeTo(null);
+        cbProductor.setEnabled(false);
+        cbDesecho.setEnabled(false);
+        cbTipoRecipiente.setEnabled(false);
+        cbTipoRecipiente2.setEnabled(false);
+        tfCantidad.setEnabled(false);
+        tfCantidad2.setEnabled(false);
+        recolectores = EsencialDBAccess.getInstance().getRecolectores();
+        for (Recolector rec: recolectores){
+            cbRecolector.addItem(rec.getName());
+        }
     }
     
     class ButtonRenderer extends JButton implements  TableCellRenderer{
@@ -39,11 +60,8 @@ public class main extends javax.swing.JFrame {
         
         public ButtonEditor(JTextField txt) {
             super(txt);
-            
             btn=new JButton();
             btn.setOpaque(true);
-            
-            //WHEN BUTTON IS CLICKED
             btn.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -52,7 +70,6 @@ public class main extends javax.swing.JFrame {
             });
         }
 
-         //OVERRIDE A COUPLE OF METHODS
         @Override
         public Component getTableCellEditorComponent(JTable table, Object obj,
             boolean selected, int row, int col) {
@@ -65,7 +82,7 @@ public class main extends javax.swing.JFrame {
         public Object getCellEditorValue() {
             DefaultTableModel model = (DefaultTableModel) tCarrito.getModel();
             if(clicked){
-                int rowIndex = tCarrito.getSelectedRow(); // Aquí obtienes el índice de la fila seleccionada
+                int rowIndex = tCarrito.getSelectedRow();
                 if (rowIndex >= 0) {
                     model.removeRow(rowIndex);
                 }
@@ -121,7 +138,6 @@ public class main extends javax.swing.JFrame {
         tCarrito = new javax.swing.JTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setPreferredSize(new java.awt.Dimension(800, 600));
         setResizable(false);
 
         bg.setBackground(new java.awt.Color(255, 255, 255));
@@ -143,6 +159,11 @@ public class main extends javax.swing.JFrame {
 
         cbProductor.setFont(new java.awt.Font("Century Gothic", 0, 14)); // NOI18N
         cbProductor.setBorder(null);
+        cbProductor.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbProductorActionPerformed(evt);
+            }
+        });
         bg.add(cbProductor, new org.netbeans.lib.awtextra.AbsoluteConstraints(550, 40, 200, -1));
 
         lblDesecho.setFont(new java.awt.Font("Century Gothic", 0, 14)); // NOI18N
@@ -151,6 +172,11 @@ public class main extends javax.swing.JFrame {
 
         cbRecolector.setFont(new java.awt.Font("Century Gothic", 0, 14)); // NOI18N
         cbRecolector.setBorder(null);
+        cbRecolector.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbRecolectorActionPerformed(evt);
+            }
+        });
         bg.add(cbRecolector, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 40, 200, -1));
 
         lblTipoRecipiente.setFont(new java.awt.Font("Century Gothic", 0, 14)); // NOI18N
@@ -166,6 +192,11 @@ public class main extends javax.swing.JFrame {
         bg.add(lblCantidad, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 190, -1, -1));
 
         tfCantidad.setFont(new java.awt.Font("Century Gothic", 0, 12)); // NOI18N
+        tfCantidad.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                tfCantidadKeyTyped(evt);
+            }
+        });
         bg.add(tfCantidad, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 190, 230, -1));
 
         pBtnRecolectar.setBackground(new java.awt.Color(204, 255, 204));
@@ -211,6 +242,11 @@ public class main extends javax.swing.JFrame {
         bg.add(lblCantidad2, new org.netbeans.lib.awtextra.AbsoluteConstraints(390, 140, -1, -1));
 
         tfCantidad2.setFont(new java.awt.Font("Century Gothic", 0, 12)); // NOI18N
+        tfCantidad2.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                tfCantidad2KeyTyped(evt);
+            }
+        });
         bg.add(tfCantidad2, new org.netbeans.lib.awtextra.AbsoluteConstraints(480, 140, 270, -1));
 
         pBtnEntregar.setBackground(new java.awt.Color(204, 255, 204));
@@ -279,11 +315,11 @@ public class main extends javax.swing.JFrame {
 
             },
             new String [] {
-                "Desecho", "Recipiente", "Cantidad", ""
+                "Movimiento", "Desecho", "Recipiente", "Cantidad", ""
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false, true
+                false, false, false, false, true
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -324,16 +360,67 @@ public class main extends javax.swing.JFrame {
             }
         }
 
-        model.addRow(new Object[]{"Prueba"+ num,"Prueba2","999","Eliminar"});
+        model.addRow(new Object[]{"Prueba"+ num,"Prueba2","999","","Eliminar"});
         num++;
-        //SET CUSTOM RENDERER TO TEAMS COLUMN
-	tCarrito.getColumnModel().getColumn(3).setCellRenderer(new ButtonRenderer());;
-	
-	//SET CUSTOM EDITOR TO TEAMS COLUMN
-	tCarrito.getColumnModel().getColumn(3).setCellEditor(new ButtonEditor(new JTextField()));
-        
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+
+	tCarrito.getColumnModel().getColumn(4).setCellRenderer(new ButtonRenderer());
+	tCarrito.getColumnModel().getColumn(4).setCellEditor(new ButtonEditor(new JTextField()));
     }//GEN-LAST:event_lblBtnRecolectarMouseClicked
+
+    private void cbRecolectorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbRecolectorActionPerformed
+        int index = cbRecolector.getSelectedIndex();
+        if(index != -1){
+           recolector = recolectores.get(index);
+            cbProductor.setEnabled(true);
+            productores = EsencialDBAccess.getInstance().getProductores(recolector.getId());
+            cbDesecho.removeAllItems();
+            cbProductor.removeAllItems();
+            for (Productor prod: productores){
+                cbProductor.addItem(prod.getName());
+            }
+            recRecolectores = EsencialDBAccess.getInstance().getRecipientes((int)recolector.getId(), 1);
+            cbTipoRecipiente2.removeAllItems();
+            for (TipoRecipiente rec: recRecolectores){
+                cbTipoRecipiente2.addItem(rec.getName());
+            }
+            cbTipoRecipiente2.setEnabled(true);
+            tfCantidad2.setEnabled(true);
+        } 
+    }//GEN-LAST:event_cbRecolectorActionPerformed
+
+    private void cbProductorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbProductorActionPerformed
+        int index = cbProductor.getSelectedIndex();
+        if(index != -1){
+            productor = productores.get(index);
+            cbDesecho.setEnabled(true);
+            desechos = EsencialDBAccess.getInstance().getDesechos(productor.getContractId());
+            cbDesecho.removeAllItems();
+            for (Desecho des: desechos){
+                cbDesecho.addItem(des.getName());
+            }
+            recProductores = EsencialDBAccess.getInstance().getRecipientes(productor.getId(), 2);
+            cbTipoRecipiente.removeAllItems();
+            for (TipoRecipiente rec: recProductores){
+                cbTipoRecipiente.addItem(rec.getName());
+            }
+            cbTipoRecipiente.setEnabled(true);
+            tfCantidad.setEnabled(true);
+        }
+    }//GEN-LAST:event_cbProductorActionPerformed
+
+    private void tfCantidadKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tfCantidadKeyTyped
+        char c = evt.getKeyChar();
+        if (!(Character.isDigit(c) || (c == KeyEvent.VK_BACK_SPACE) || (c == KeyEvent.VK_DELETE)) || tfCantidad.getText().length() >= 10) {
+          evt.consume(); // No permitir la entrada de caracteres que no sean números
+        }
+    }//GEN-LAST:event_tfCantidadKeyTyped
+
+    private void tfCantidad2KeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tfCantidad2KeyTyped
+        char c = evt.getKeyChar();
+        if (!(Character.isDigit(c) || (c == KeyEvent.VK_BACK_SPACE) || (c == KeyEvent.VK_DELETE)) || tfCantidad2.getText().length() >= 10) {
+          evt.consume(); // No permitir la entrada de caracteres que no sean números
+        }
+    }//GEN-LAST:event_tfCantidad2KeyTyped
 
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {

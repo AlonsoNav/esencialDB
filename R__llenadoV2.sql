@@ -18,16 +18,7 @@ BEGIN
     DECLARE @nombre varchar(50);
     DECLARE @cuentaBanco varchar(30);
     DECLARE @contador INT = 1;
-
-	WHILE @contador <= 1000
-    BEGIN
-        SET @nombre = 'Recolectora:' + CAST(@contador AS varchar(5));
-		SET @cuentaBanco = 'CuentaBanco:' + CAST(@contador AS varchar(5));
-
-		INSERT INTO recolectoras(nombre, regionId, direccionId, cuentaBanco) VALUES (@nombre, 1, 1, @cuentaBanco);
-
-        SET @contador = @contador + 1;
-    END
+	DECLARE @contador2 INT;
 
 	SET @contador = 1;
 	WHILE @contador <= 300
@@ -36,11 +27,31 @@ BEGIN
 		INSERT tiposRecipiente(description, modeloId, cantDisponible, cantDesechada, cantEnMante, cantEnUso, capacidad, pesoBase) 
 		VALUES(@nombre, 1, 0, 0, 0, 0, RAND() * 8999 + 1000, RAND() * 9 + 1);
 		INSERT desechosXRecipiente(tipoRecId, tipoDesechoId) VALUES(@contador, RAND()*2+1);
+
+        SET @contador = @contador + 1;
+    END
+
+	SET @contador = 1;
+	WHILE @contador <= 1000
+    BEGIN
+        SET @nombre = 'Recolectora:' + CAST(@contador AS varchar(5));
+		SET @cuentaBanco = 'CuentaBanco:' + CAST(@contador AS varchar(5));
+
+		INSERT INTO recolectoras(nombre, regionId, direccionId, cuentaBanco) VALUES (@nombre, 1, 1, @cuentaBanco);
+
+		SET @contador2 = 1;
+
+		WHILE @contador2 <= RAND()*29+1
+		BEGIN
+			INSERT INTO movimientosRecipiente(tipoRecId, cantidadRec, checksum, movementTypeId, recolectoraId, direccionId)
+			VALUES(RAND()*299+1, RAND()*9000+1000, CHECKSUM(8), 1, @contador, 1);
+			SET @contador2 = @contador2 + 1;
+		END
+
         SET @contador = @contador + 1;
     END
 
 	DECLARE @contaminacionActual DECIMAL(5,2);
-	DECLARE @contador2 INT;
 	SET @contador = 1;
 
 	WHILE @contador <= 10000
@@ -94,3 +105,5 @@ END
 
 GO
 EXEC llenado2
+
+DROP PROCEDURE llenado2
