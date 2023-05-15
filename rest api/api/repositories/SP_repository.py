@@ -5,7 +5,7 @@ from sqlalchemy.pool import NullPool
 # Iniciar la conexion a la base de datos
 #-----------------------------------------------------------------
 username = "sa"
-password = "123"
+password = "8998"
 server = "localhost"
 port = "1433"
 database = "esencialDB"

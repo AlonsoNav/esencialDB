@@ -8,7 +8,7 @@ from api.controllers import SP_controller
 
 bp = Blueprint('Pool', __name__, url_prefix='/Pool') #Ruta
 
-@bp.route('/', methods=['POST'])
+@bp.route('/', methods=['POST', 'GET'])
 def SPExecutePool():
     result = SP_controller.controllerExecuteSP(True)
     return jsonify(result)
