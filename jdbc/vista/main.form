@@ -363,6 +363,9 @@
                   <Color id="Hand Cursor"/>
                 </Property>
               </Properties>
+              <Events>
+                <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="lblBtnEntregarMouseClicked"/>
+              </Events>
             </Component>
           </SubComponents>
         </Container>
@@ -419,6 +422,9 @@
                   <Color id="Hand Cursor"/>
                 </Property>
               </Properties>
+              <Events>
+                <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="lblBtnFinalizarMouseClicked"/>
+              </Events>
             </Component>
           </SubComponents>
         </Container>
