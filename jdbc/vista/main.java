@@ -290,6 +290,11 @@ public class main extends javax.swing.JFrame {
         lblBtnFinalizar.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblBtnFinalizar.setText("Finalizar Recolección");
         lblBtnFinalizar.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        lblBtnFinalizar.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                lblBtnFinalizarMouseClicked(evt);
+            }
+        });
 
         javax.swing.GroupLayout pBtnFinalizarLayout = new javax.swing.GroupLayout(pBtnFinalizar);
         pBtnFinalizar.setLayout(pBtnFinalizarLayout);
@@ -473,6 +478,16 @@ public class main extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(null, "Debe llenar correctamente los campos de la entrega.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_lblBtnEntregarMouseClicked
+
+    private void lblBtnFinalizarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblBtnFinalizarMouseClicked
+        if(!cbRecolector.isEnabled()){
+            EsencialDBAccess.getInstance().moverRecTVP(carrito, productor, recolector);
+            JOptionPane.showMessageDialog(null, "Se ha confirmado el traspaso", "Confirmado el traspaso", JOptionPane.INFORMATION_MESSAGE);
+            this.dispose();
+        }else{
+            JOptionPane.showMessageDialog(null, "El carrito está vacío", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_lblBtnFinalizarMouseClicked
 
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {

@@ -1,4 +1,5 @@
 package control;
+import com.microsoft.sqlserver.jdbc.SQLServerDataTable;
 import java.util.ArrayList;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -103,5 +104,36 @@ public class EsencialDBAccess implements IDataConstants{
             ex.printStackTrace();
         }
         return false;
+    }
+    
+    public void moverRecTVP(ArrayList<Movimiento> carrito, Productor productor, Recolector recolector){
+        try{
+            SQLServerDataTable movimientos = new SQLServerDataTable();
+            movimientos.addColumnMetadata("tipoRecId", java.sql.Types.INTEGER);
+            movimientos.addColumnMetadata("cantidadRec", java.sql.Types.BIGINT);
+            movimientos.addColumnMetadata("desechoId", java.sql.Types.INTEGER);
+            movimientos.addColumnMetadata("cantidadesDes", java.sql.Types.BIGINT);
+            movimientos.addColumnMetadata("checksum", java.sql.Types.VARBINARY);
+            movimientos.addColumnMetadata("movementTypeId", java.sql.Types.SMALLINT);
+            movimientos.addColumnMetadata("productorId", java.sql.Types.INTEGER);
+            movimientos.addColumnMetadata("recolectoraId", java.sql.Types.BIGINT);
+            movimientos.addColumnMetadata("direccionId", java.sql.Types.BIGINT);
+            
+            for(Movimiento mov:carrito){
+                if(mov.getDes() == null){
+                    movimientos.addRow(mov.getRec().getId(), mov.getCantidad(), 
+                            null, null, new byte[]{0x00}, 2, productor.getId(), null, 1);
+                }else{
+                    movimientos.addRow(mov.getRec().getId(), mov.getCantidad(),  
+                            mov.getDes().getId(), mov.getRec().getCapacidad().longValue() * mov.getCantidad(),
+                            new byte[]{0x00}, 1, null, recolector.getId(), 1);
+                }
+            }
+            PreparedStatement spGetProductorForRecolector = conexion.prepareStatement("{call dbo.SP_MoverRecipiente(?)}");
+            spGetProductorForRecolector.setObject(1, movimientos);
+            spGetProductorForRecolector.execute();
+        }catch(Exception ex){
+            ex.printStackTrace();
+        }
     }
 }
