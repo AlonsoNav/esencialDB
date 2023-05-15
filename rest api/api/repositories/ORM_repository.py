@@ -1,10 +1,10 @@
 from api.repositories.models import inspectores, inventarioMateriales, logProducciones
-from api.repositories.SP_repository import startConexion
+from api.repositories.SP_repository import NoPoolEngine
 from sqlalchemy import select
 from sqlalchemy.orm import sessionmaker
 
 def executeSPbyORM():
-    conexion = startConexion(False)
+    conexion = NoPoolEngine
     Session = sessionmaker(bind=conexion)
     session = Session()
 
