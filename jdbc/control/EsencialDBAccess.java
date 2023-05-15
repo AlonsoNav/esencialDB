@@ -82,7 +82,6 @@ public class EsencialDBAccess implements IDataConstants{
             spGetProductorForRecolector.setInt(1, id);  
             spGetProductorForRecolector.setInt(2, opc); 
             ResultSet rs = spGetProductorForRecolector.executeQuery(); 
-            
             while (rs.next()){
                 TipoRecipiente rec = new TipoRecipiente(rs.getInt("tipoRecId"), rs.getBigDecimal("capacidad"), rs.getString("description"), rs.getInt("cantidad"));
                 res.add(rec);
@@ -91,5 +90,18 @@ public class EsencialDBAccess implements IDataConstants{
             ex.printStackTrace();
         }
         return res;
+    }
+    
+    public boolean recVsDes(int idRec, int idDes){
+        try{
+            PreparedStatement spGetProductorForRecolector = conexion.prepareStatement("{call dbo.SP_GetRecipientesForProOrRec(?, ?)}");
+            spGetProductorForRecolector.setInt(1, idRec);  
+            spGetProductorForRecolector.setInt(2, idDes); 
+            ResultSet rs = spGetProductorForRecolector.executeQuery(); 
+            return rs.next();
+        }catch(Exception ex){
+            ex.printStackTrace();
+        }
+        return false;
     }
 }

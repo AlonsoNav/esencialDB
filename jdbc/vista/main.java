@@ -17,12 +17,12 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 
 public class main extends javax.swing.JFrame {
-    private int num = 0;
     private ArrayList<Recolector> recolectores;
     private ArrayList<Productor> productores;
     private ArrayList<Desecho> desechos;
     private ArrayList<TipoRecipiente> recRecolectores;
     private ArrayList<TipoRecipiente> recProductores;
+    private ArrayList<Movimiento> carrito;
     private Recolector recolector;
     private Productor productor;
     
@@ -35,6 +35,7 @@ public class main extends javax.swing.JFrame {
         cbTipoRecipiente2.setEnabled(false);
         tfCantidad.setEnabled(false);
         tfCantidad2.setEnabled(false);
+        carrito = new ArrayList<Movimiento>();
         recolectores = EsencialDBAccess.getInstance().getRecolectores();
         for (Recolector rec: recolectores){
             cbRecolector.addItem(rec.getName());
@@ -84,11 +85,14 @@ public class main extends javax.swing.JFrame {
             if(clicked){
                 int rowIndex = tCarrito.getSelectedRow();
                 if (rowIndex >= 0) {
+                    carrito.remove(rowIndex);
                     model.removeRow(rowIndex);
                 }
-                if(tCarrito.getRowCount() <= 0)
+                if(tCarrito.getRowCount() <= 0){
+                    cbRecolector.setEnabled(true);
+                    cbProductor.setEnabled(true);
                     model.addRow(new Object[]{"","","",""});
-                else if(rowIndex != 0)
+                }else if(rowIndex != 0)
                     tCarrito.setEditingRow(rowIndex-1);
             }
             clicked=false;
@@ -256,6 +260,11 @@ public class main extends javax.swing.JFrame {
         lblBtnEntregar.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblBtnEntregar.setText("Entregar");
         lblBtnEntregar.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        lblBtnEntregar.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                lblBtnEntregarMouseClicked(evt);
+            }
+        });
 
         javax.swing.GroupLayout pBtnEntregarLayout = new javax.swing.GroupLayout(pBtnEntregar);
         pBtnEntregar.setLayout(pBtnEntregarLayout);
@@ -354,17 +363,32 @@ public class main extends javax.swing.JFrame {
 
     private void lblBtnRecolectarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblBtnRecolectarMouseClicked
         DefaultTableModel model = (DefaultTableModel) tCarrito.getModel();
-        if(model.getRowCount()!=0){
-            if(model.getValueAt(0,0).equals("")){
-                model.removeRow(0);
+        int indexDesecho = cbDesecho.getSelectedIndex();
+        int indexRec = cbTipoRecipiente.getSelectedIndex();
+        String cant = tfCantidad.getText();
+        if(indexDesecho != -1 && indexRec != -1 && !cant.isEmpty()){
+            Desecho desecho = desechos.get(indexDesecho);
+            TipoRecipiente rec = recProductores.get(indexRec);
+            int cantidad = Integer.parseInt(cant);
+            
+            if(EsencialDBAccess.getInstance().recVsDes(rec.getId(),desecho.getId()) && rec.getCantidad() >= cantidad){
+                if(model.getRowCount()!=0 && model.getValueAt(0,0).equals(""))
+                    model.removeRow(0);
+
+                model.addRow(new Object[]{"Recolecta",desecho.getName(),rec.getName(),cant,"Eliminar"});
+                carrito.add(new Movimiento(desecho, rec, cantidad));
+                rec.setCantidad(rec.getCantidad() - cantidad);
+                cbRecolector.setEnabled(false);
+                cbProductor.setEnabled(false);
+
+                tCarrito.getColumnModel().getColumn(4).setCellRenderer(new ButtonRenderer());
+                tCarrito.getColumnModel().getColumn(4).setCellEditor(new ButtonEditor(new JTextField()));
+            }else{
+                JOptionPane.showMessageDialog(null, "Hay un problema con el recipiente, puede que ya no haya cantidad o que no sea indicado para el desecho", "Error", JOptionPane.ERROR_MESSAGE);
             }
+        }else{
+            JOptionPane.showMessageDialog(null, "Debe llenar correctamente los campos de la recolección.", "Error", JOptionPane.ERROR_MESSAGE);
         }
-
-        model.addRow(new Object[]{"Prueba"+ num,"Prueba2","999","","Eliminar"});
-        num++;
-
-	tCarrito.getColumnModel().getColumn(4).setCellRenderer(new ButtonRenderer());
-	tCarrito.getColumnModel().getColumn(4).setCellEditor(new ButtonEditor(new JTextField()));
     }//GEN-LAST:event_lblBtnRecolectarMouseClicked
 
     private void cbRecolectorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbRecolectorActionPerformed
@@ -421,6 +445,34 @@ public class main extends javax.swing.JFrame {
           evt.consume(); // No permitir la entrada de caracteres que no sean números
         }
     }//GEN-LAST:event_tfCantidad2KeyTyped
+
+    private void lblBtnEntregarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblBtnEntregarMouseClicked
+        DefaultTableModel model = (DefaultTableModel) tCarrito.getModel();
+        int indexRec = cbTipoRecipiente2.getSelectedIndex();
+        String cant = tfCantidad2.getText();
+        if(indexRec != -1 && !cant.isEmpty()){
+            TipoRecipiente rec = recRecolectores.get(indexRec);
+            int cantidad = Integer.parseInt(cant);
+            
+            if(rec.getCantidad() >= cantidad){
+                if(model.getRowCount()!=0 && model.getValueAt(0,0).equals(""))
+                    model.removeRow(0);
+
+                model.addRow(new Object[]{"Entrega","no aplica",rec.getName(),cant,"Eliminar"});
+                carrito.add(new Movimiento(null, rec, cantidad));
+                rec.setCantidad(rec.getCantidad() - cantidad);
+                cbRecolector.setEnabled(false);
+                cbProductor.setEnabled(false);
+
+                tCarrito.getColumnModel().getColumn(4).setCellRenderer(new ButtonRenderer());
+                tCarrito.getColumnModel().getColumn(4).setCellEditor(new ButtonEditor(new JTextField()));
+            }else{
+                JOptionPane.showMessageDialog(null, "No hay suficiente cantidad del recipiente a entregar.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }else{
+            JOptionPane.showMessageDialog(null, "Debe llenar correctamente los campos de la entrega.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_lblBtnEntregarMouseClicked
 
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
