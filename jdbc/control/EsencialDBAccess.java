@@ -28,9 +28,8 @@ public class EsencialDBAccess implements IDataConstants{
     public ArrayList<Recolector> getRecolectores(){
         ArrayList<Recolector> res = new ArrayList<Recolector>();
         try{
-            Statement stmt = conexion.createStatement();
-            String SQL = "SELECT recolectoraId, nombre FROM recolectoras;";
-            ResultSet rs = stmt.executeQuery(SQL);
+            PreparedStatement spGetProductorForRecolector = conexion.prepareStatement("{call dbo.SP_GetRecolectores()}");
+            ResultSet rs = spGetProductorForRecolector.executeQuery(); 
             
             while (rs.next()){
                 Recolector recolector = new Recolector(rs.getLong("recolectoraId"), rs.getString("nombre"));
