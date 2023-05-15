@@ -1,18 +1,16 @@
 USE [esencialDB]
 GO
 CREATE PROCEDURE [dbo].[SP_apitest]
+	@movement SMALLINT
 AS 
 BEGIN
-SELECT 
-	INS.nombre AS IdInspector
-FROM dbo.inventarioMateriales IM
-	INNER JOIN dbo.inspectores INS on INS.inspectorId = IM.inspectorId	 
-	INNER JOIN dbo.logProducciones P on P.produccionId = IM.produccionId	 
-WHERE 
-	INS.inspectorId = P.inspectorId;
+	SELECT RE.nombre as recolector, R.description as recipiente, M.cantidadRec as cantidad FROM movimientosRecipiente M
+	INNER JOIN tiposRecipiente R ON R.tipoRecId = M.tipoRecId
+	INNER JOIN recolectoras RE ON RE.recolectoraId = M.recolectoraId
+	WHERE M.movementTypeId = @movement
+	ORDER BY M.recolectoraId ASC;
 END
 
-exec dbo.SP_apitest
+exec dbo.SP_apitest 1
 
 drop procedure SP_apitest
-
