@@ -1,10 +1,10 @@
 from api.repositories.models import inspectores, inventarioMateriales, logProducciones, productos,materiales
-from api.repositories.SP_repository import NoPoolEngine
+from api.repositories.SP_repository import NoPoolEngine, poolEngine
 from sqlalchemy import select
 from sqlalchemy.orm import sessionmaker
 
 def executeSPbyORM():
-    conexion = NoPoolEngine
+    conexion = poolEngine
     Session = sessionmaker(bind=conexion)
     session = Session()
 

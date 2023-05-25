@@ -13,7 +13,8 @@ BEGIN
 	INSERT INTO contratosStatus(descriptionj) VALUES ('ACTIVE');
 	INSERT INTO marcasRecipiente(nombre) VALUES ('MARCA');
 	INSERT INTO modelosRecipiente(descripcion, marcaId) VALUES ('MODELO', 1);
-	INSERT INTO movementType(descripcion) VALUES('Entrega a recolectora con recipiente lleno'),('Entrega a productor con recipiente vacío');
+	INSERT INTO movementType(descripcion) VALUES('Entrega a recolectora con recipiente lleno'),('Entrega a productor con recipiente vacío'), ('Entrega de recipientes Planta->Recolector'), ('Nuevos recipientes');
+	INSERT INTO plantas(direccion) VALUES(1)
 
     DECLARE @nombre varchar(50);
     DECLARE @cuentaBanco varchar(30);
@@ -25,8 +26,10 @@ BEGIN
     BEGIN
 		SET @nombre = 'Recipiente:' + CAST(@contador AS varchar(5));
 		INSERT tiposRecipiente(description, modeloId, cantDisponible, cantDesechada, cantEnMante, cantEnUso, capacidad, pesoBase) 
-		VALUES(@nombre, 1, 0, 0, 0, 0, RAND() * 8999 + 1000, RAND() * 9 + 1);
+		VALUES(@nombre, 1, 1000, 0, 0, 0, RAND() * 8999 + 1000, RAND() * 9 + 1);
 		INSERT desechosXRecipiente(tipoRecId, tipoDesechoId) VALUES(@contador, RAND()*2+1);
+		INSERT INTO movimientosRecipiente(tipoRecId, cantidadRec, checksum, movementTypeId, plantaId, direccionId)
+		VALUES(@contador, 1000, checksum(@contador+1000), 4, 1, 1)
 
         SET @contador = @contador + 1;
     END
