@@ -1,11 +1,9 @@
 USE [esencialDB]
 GO
-/* El lost update podría llegar a suceder si se está entregando el mismo tipo de recipiente al mismo tiempo a diversos recolectores.
--- Al actualizar la tabla de tipos de recipientes para colocar ahora la nueva cantidad de recipientes disponibles (limpios y sin daños),
--- puede ocurrir que se pierda cierta rango de recipientes que se actualizaron, pero luego borraron tras una nueva actualización.
--- La solución es realizar el select de la cantidad que se actualizará, antes de la transacción.
--- Niveles más altos de isolación solo causan deadlocks.*/
-CREATE PROCEDURE [dbo].[SP_EntregarRecipienteARecolector1](
+/* Aquí leeremos un dato mal de la compra de recipientes dado un fallo de transacción.
+-- El propósito es demostrar el Dirty Read que puede provocar.
+-- Esto se soluciona con el Isolation Level de Read Committed.*/
+CREATE PROCEDURE [dbo].[SP_EntregarRecipienteARecolector3](
 	@rec INT,
 	@cantRec BIGINT,
 	@planta INT,
@@ -25,7 +23,7 @@ BEGIN
 	SET @InicieTransaccion = 0
 	IF @@TRANCOUNT=0 BEGIN
 		SET @InicieTransaccion = 1
-		SET TRANSACTION ISOLATION LEVEL READ COMMITTED
+		SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
 		BEGIN TRANSACTION
 	END
 
@@ -35,13 +33,12 @@ BEGIN
 		IF @cantDisponible < @cantRec BEGIN
 			RAISERROR ('No hay recipientes suficientes', 16, 1); 
 		END
-		WAITFOR DELAY '00:00:01';
 		UPDATE tiposRecipiente SET cantDisponible = @cantDisponible - @cantRec, cantEnUso = @cantUso + @cantRec WHERE tipoRecId = @rec
 		INSERT INTO movimientosRecipiente(tipoRecId, cantidadRec, checksum, movementTypeId, plantaId, direccionId)
 		VALUES (@rec, -1*@cantRec, checksum(@cantRec+@rec), 3, @planta, @dir)
 		INSERT INTO movimientosRecipiente(tipoRecId, cantidadRec, checksum, movementTypeId, recolectoraId, direccionId)
 		VALUES (@rec, @cantRec, checksum(@cantRec+@rec), 3, @planta, @dir)
-		
+
 		IF @InicieTransaccion=1 BEGIN
 			COMMIT
 		END

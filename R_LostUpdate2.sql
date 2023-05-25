@@ -21,7 +21,6 @@ BEGIN
 	DECLARE @dir BIGINT
 	SELECT @dir = direccion FROM plantas WHERE plantaId = @planta
 	DECLARE @cantUso BIGINT
-	SELECT @cantDisponible = cantDisponible, @cantUso = cantEnUso FROM tiposRecipiente WHERE tipoRecId = @rec;
 	
 	SET @InicieTransaccion = 0
 	IF @@TRANCOUNT=0 BEGIN
@@ -32,6 +31,7 @@ BEGIN
 
 	BEGIN TRY
 		SET @CustomError = 2001
+		SELECT @cantDisponible = cantDisponible, @cantUso = cantEnUso FROM tiposRecipiente WHERE tipoRecId = @rec;
 		IF @cantDisponible < @cantRec BEGIN
 			RAISERROR ('No hay recipientes suficientes', 16, 1); 
 		END
