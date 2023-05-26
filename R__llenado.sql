@@ -73,6 +73,8 @@ BEGIN
 
         INSERT INTO productos(descripcion)
         VALUES (@nombre);
+		INSERT INTO materialesXProducto(materialId, productoId, cantidad)
+		VALUES (RAND()*9999+1, @contador, RAND()*4 +1), (RAND()*9999+1, @contador, RAND()*4 +1), (RAND()*9999+1, @contador, RAND()*4 +1)
 
         SET @contador = @contador + 1;
     END
