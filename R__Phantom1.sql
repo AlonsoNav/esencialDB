@@ -1,13 +1,14 @@
 USE [esencialDB]
 GO
-/* Al producir productos se pueden hacer varias inserciones que conlleven la pérdida del último valor de índice de la tabla.
--- Esto ocurre por inserciones phantom.
--- La solución está en bloquear esa tabla al hacer la inserciones y mantener una isolation Serializable.
+/* Al entregar recipientes a un recolector y revisar los que se tienen en esa planta específica puede ocurrir un problema de phantom al hacer la suma de los logs del recipiente.
+-- En el momento que hace la suma, puede ocurrir que haya un inserción, por lo tanto, el valor de la suma estaría erróneo.
+-- La solución es chequear hasta el final y en caso de que haya valores negativos tirar el rollback.
 */
-CREATE PROCEDURE [dbo].[SP_ProducirProductos1](
-	@prod INT,
-	@cant BIGINT,
-	@ins BIGINT
+CREATE PROCEDURE [dbo].[SP_EntregarRecipienteARecolector4](
+	@rec INT,
+	@cantRec BIGINT,
+	@planta INT,
+	@recolectora BIGINT
 )
 AS
 BEGIN
@@ -15,46 +16,35 @@ BEGIN
 	DECLARE @ErrorNumber INT, @ErrorSeverity INT, @ErrorState INT, @CustomError INT
 	DECLARE @Message VARCHAR(200)
 	DECLARE @InicieTransaccion BIT
-	DECLARE @cantActual INT, @prodActual BIGINT
+	DECLARE @cantDisponible BIGINT
+	DECLARE @dir BIGINT
+	SELECT @dir = direccion FROM plantas WHERE plantaId = @planta
+	DECLARE @cantUso BIGINT, @cantPlanta BIGINT
 	
 	SET @InicieTransaccion = 0
 	IF @@TRANCOUNT=0 BEGIN
 		SET @InicieTransaccion = 1
-		--SET TRANSACTION ISOLATION LEVEL SERIALIZABLE
 		SET TRANSACTION ISOLATION LEVEL READ COMMITTED
 		BEGIN TRANSACTION
 	END
 
 	BEGIN TRY
 		SET @CustomError = 2001
-		--SELECT TOP 1 @prodActual = produccionId FROM logProducciones ORDER BY produccionId DESC
-		INSERT logProducciones(productoId, cantidad, inspectorId, checksum)
-		VALUES(@prod, @cant, @ins, checksum(@prod+@cant))
+		SELECT @cantPlanta = SUM(cantidadRec) FROM movimientosRecipiente WHERE plantaId = @planta AND tipoRecId = @rec
+		IF  @cantPlanta < @cantRec BEGIN
+			RAISERROR ('No hay recipientes suficientes', 16, 1); 
+		END
 		WAITFOR DELAY '00:00:10'
-		--SET @prodActual = IDENT_CURRENT('logProducciones')
-		SELECT TOP 1 @prodActual = produccionId FROM logProducciones ORDER BY produccionId DESC
-		PRINT @prodActual
-
-		DECLARE mateXProd_cursor CURSOR FOR SELECT materialId, cantidad FROM materialesXProducto WHERE productoId = @prod
-		OPEN mateXProd_cursor;
-
-		DECLARE @mat INT, @cantMat INT
-
-		FETCH NEXT FROM mateXProd_cursor INTO @mat, @cantMat
-		WHILE @@FETCH_STATUS = 0
-		BEGIN
-			SELECT @cantActual = CAST(SUM(cantidad) as INT) FROM inventarioMateriales WHERE materialId = @mat
-			IF @cantActual < @cantMat*@cant BEGIN
-				RAISERROR ('No hay materiales suficientes', 16, 1); 
-			END
-			INSERT inventarioMateriales(materialId, cantidad, inspectorId, checksum, produccionId)
-			VALUES (@mat, -1*@cantMat*@cant, @ins, checksum(@mat+@ins), @prodActual)
-    
-			FETCH NEXT FROM mateXProd_cursor INTO @mat, @cantMat
-		END;
-
-		CLOSE mateXProd_cursor;
-		DEALLOCATE mateXProd_cursor;
+		UPDATE tiposRecipiente SET cantDisponible = cantDisponible - @cantRec, cantEnUso = cantEnUso + @cantRec WHERE tipoRecId = @rec
+		INSERT INTO movimientosRecipiente(tipoRecId, cantidadRec, checksum, movementTypeId, plantaId, direccionId)
+		VALUES (@rec, -1*@cantRec, checksum(@cantRec+@rec), 3, @planta, @dir)
+		INSERT INTO movimientosRecipiente(tipoRecId, cantidadRec, checksum, movementTypeId, recolectoraId, direccionId)
+		VALUES (@rec, @cantRec, checksum(@cantRec+@rec), 3, @planta, @dir)
+		
+		/*SELECT @cantPlanta = SUM(cantidadRec) FROM movimientosRecipiente WHERE plantaId = @planta AND tipoRecId = @rec
+		IF  @cantPlanta < 0 BEGIN
+			RAISERROR ('No hay recipientes suficientes', 16, 1); 
+		END*/
 
 		IF @InicieTransaccion=1 BEGIN
 			COMMIT

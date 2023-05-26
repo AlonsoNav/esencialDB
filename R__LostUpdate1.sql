@@ -3,7 +3,7 @@ GO
 /* El lost update podría llegar a suceder si se está entregando el mismo tipo de recipiente al mismo tiempo a diversos recolectores.
 -- Al actualizar la tabla de tipos de recipientes para colocar ahora la nueva cantidad de recipientes disponibles (limpios y sin daños),
 -- puede ocurrir que se pierda cierta rango de recipientes que se actualizaron, pero luego borraron tras una nueva actualización.
--- La solución es realizar el select de la cantidad que se actualizará, antes de la transacción.
+-- La solución es realizar el "select" directamente en el update para agarrar el último cambio.
 -- Niveles más altos de isolación solo causan deadlocks.*/
 CREATE PROCEDURE [dbo].[SP_EntregarRecipienteARecolector1](
 	@rec INT,
@@ -37,6 +37,7 @@ BEGIN
 		END
 		WAITFOR DELAY '00:00:01';
 		UPDATE tiposRecipiente SET cantDisponible = @cantDisponible - @cantRec, cantEnUso = @cantUso + @cantRec WHERE tipoRecId = @rec
+		--UPDATE tiposRecipiente SET cantDisponible = cantDisponible - @cantRec, cantEnUso = cantEnUso + @cantRec WHERE tipoRecId = @rec
 		INSERT INTO movimientosRecipiente(tipoRecId, cantidadRec, checksum, movementTypeId, plantaId, direccionId)
 		VALUES (@rec, -1*@cantRec, checksum(@cantRec+@rec), 3, @planta, @dir)
 		INSERT INTO movimientosRecipiente(tipoRecId, cantidadRec, checksum, movementTypeId, recolectoraId, direccionId)

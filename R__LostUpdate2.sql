@@ -37,6 +37,7 @@ BEGIN
 		END
 		WAITFOR DELAY '00:00:10';
 		UPDATE tiposRecipiente SET cantDisponible = @cantDisponible - @cantRec, cantEnUso = @cantUso + @cantRec WHERE tipoRecId = @rec
+		--UPDATE tiposRecipiente SET cantDisponible = cantDisponible - @cantRec, cantEnUso = cantEnUso + @cantRec WHERE tipoRecId = @rec
 		INSERT INTO movimientosRecipiente(tipoRecId, cantidadRec, checksum, movementTypeId, plantaId, direccionId)
 		VALUES (@rec, -1*@cantRec, checksum(@cantRec+@rec), 3, @planta, @dir)
 		INSERT INTO movimientosRecipiente(tipoRecId, cantidadRec, checksum, movementTypeId, recolectoraId, direccionId)
