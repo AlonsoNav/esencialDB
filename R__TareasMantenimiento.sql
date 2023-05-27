@@ -18,12 +18,31 @@ CREATE VIEW dbo.ViewLogicaNegocios
 WITH SCHEMABINDING 
 AS 
 SELECT 
-	P.pagoId as IdPago,
-	T.transaccionId as IdTransaccion,
-	C.contratoId as IdContrato
+	P.pagoId,
+	P.posttime AS FechaPago,
+	T.transaccionId,
+	T.posttime AS FechaTransaccion,
+	C.contratoId,
+	C.productorId,
+	C.fechaInicio,
+	C.fechaFin,
+	MR.movimientoId,
+	MR.posttime as FechaMovimiento,
+	MR.recolectoraId,
+	PXP.productoId,
+	PXP.paisId as PaisProducto,
+	PXP.precio,
+	TXP.tratamientoId,
+	TXP.precioXUni,
+	TXP.paisId as PaisTratamiento,
+	TXP.posttime as FechaPrecioTratamiento,
+	TXP.enabled
 FROM dbo.pagos P
 	INNER JOIN dbo.transacciones T on T.transaccionId = P.transaccionId
 	INNER JOIN dbo.contratos C on C.contratoId = T.transaccionId
+	INNER JOIN dbo.movimientosRecipiente MR on MR.movimientoId = C.contratoId
+	INNER JOIN dbo.preciosProXPais PXP on PXP.productoId = pagoId
+	INNER JOIN dbo.preciosTratamientoXPais TXP on TXP.paisId = PXP.paisId 
 GO
 select * from ViewLogicaNegocios;
 
