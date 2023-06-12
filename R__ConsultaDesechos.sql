@@ -122,12 +122,26 @@ BEGIN
 	(28, 'dir Fisica', geography::STGeomFromText('POINT(-122.3493 47.6518)', 4326)),
 	(29, 'dir Fisica', geography::STGeomFromText('POINT(-122.3493 47.6518)', 4326)),
 	(30, 'dir Fisica', geography::STGeomFromText('POINT(-122.3493 47.6518)', 4326));
+	INSERT INTO industrias(name) values('Alimenticia'),
+	('Distribucion Digital'),
+	('Farmaceutica'),
+	('Siderurgica'),
+	('Metalurgica'),
+	('Quimica'),
+	('PetroQuimica'),
+	('Textil'),
+	('Automotriz'),
+	('Inmobiliaria');
+	DECLARE @uniMedida varchar(10) = 'kg';
+	INSERT INTO tiposDesecho (descripcion, uniMedida)
+	VALUES('agua', @uniMedida), ('aire', @uniMedida), ('tierra', @uniMedida), ('fuego', @uniMedida);
 
 	-- Movement Type select * from movementType
 	INSERT INTO movementType(descripcion)
 	VALUES('Entrega de recipientes Recolector->Planta')
 
 	DECLARE @contador INT = 1;
+
 	-- Fill Plantas
 	SET @contador = 1;
 	WHILE @contador <= 30
@@ -138,6 +152,22 @@ BEGIN
 	----------------------------
     DECLARE @nombre varchar(50);
     DECLARE @cuentaBanco varchar(30);
+	---------------------------
+	SET @contador = 1;
+	DECLARE @tipoDesecho smallint;
+	DECLARE @salubridad decimal(5,2);
+
+	WHILE @contador <= 10000
+    BEGIN
+		SET @tipoDesecho = RAND() * 3 + 1;
+		SET @salubridad = RAND() * 100;
+        SET @nombre = 'Desecho:' + CAST(@contador AS varchar(5));
+
+        INSERT INTO desechos(tipoDesechoId, salubridad, nombre)
+        VALUES (@tipoDesecho, @salubridad, @nombre);
+
+        SET @contador = @contador + 1;
+    END
 	-----------
 	SET @contador = 1;
 	WHILE @contador <= 300
@@ -165,7 +195,7 @@ BEGIN
         SET @nombre = 'Productor:' + CAST(@contador AS varchar(5));
 		SET @contaminacionActual = RAND() * 99 + 1;
 
-		INSERT INTO productores(categoria, descripcion, direccionId, contaminacionActual, balance, cuentaBanco) 
+		INSERT INTO productores(industriaId, descripcion, direccionId, contaminacionActual, balance, cuentaBanco) 
 		VALUES (1, @nombre, RAND()*29+1, @contaminacionActual, 0, @cuentaBanco);
 
         SET @contador = @contador + 1;
