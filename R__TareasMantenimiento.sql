@@ -7,7 +7,7 @@ inner join sys.objects O on M.object_id = O.object_id
 where O.type in ('P');
 
 GO
-EXEC sp_helptext N'dbo.SP_GetDesechoForContrato'; --Verifica que el SP está encriptado
+EXEC sp_helptext N'dbo.llenado'; --Verifica que el SP está encriptado
 
 -- b)
 -- View de las tablas relacionadas a la lógica de negocios de la DB
@@ -44,7 +44,21 @@ FROM dbo.pagos P
 	INNER JOIN dbo.preciosProXPais PXP on PXP.productoId = pagoId
 	INNER JOIN dbo.preciosTratamientoXPais TXP on TXP.paisId = PXP.paisId 
 GO
-select * from ViewLogicaNegocios;
+
+-- c)
+-- Command
+DECLARE @spName NVARCHAR(255);
+DECLARE spCursor CURSOR FOR
+SELECT [name] FROM sys.objects WHERE type = 'P';
+OPEN spCursor;
+FETCH NEXT FROM spCursor INTO @spName;
+WHILE @@FETCH_STATUS = 0
+BEGIN
+EXEC sp_recompile @spName;
+FETCH NEXT FROM spCursor INTO @spName;
+END;
+CLOSE spCursor;
+DEALLOCATE spCursor;
 
 -- d)
 -- Llenado de la bitacora del sistema
@@ -80,7 +94,7 @@ SELECT * FROM eventLogs;
 
 drop procedure fillEventLog;
 
---Insertar into EventTypes, Source, Levels, objectTypes
+--Insertar into EventTypes, Source, Levels, objectTypes USE [esencialDB]
 insert into dbo.eventType(name) values 
 ('Information'),
 ('Warning'),
